@@ -29,8 +29,8 @@ async fn main() {
     loop {
         clear_background(BACKGROUND);
 
-        if is_mouse_button_pressed(MouseButton::Left) {roster = check_fields(MouseButton::Left, roster)}
-        else if is_mouse_button_pressed(MouseButton::Right) {roster = check_fields(MouseButton::Right, roster)}
+        if is_mouse_button_pressed(MouseButton::Left) {roster = check_roster_input(MouseButton::Left, roster)}
+        else if is_mouse_button_pressed(MouseButton::Right) {roster = check_roster_input(MouseButton::Right, roster)}
 
         draw_roster(&roster);
         next_frame().await
@@ -77,34 +77,44 @@ fn draw_roster(roster: &Vec<Vec<Field>>) {
     }
 }
 
-fn check_fields(input: MouseButton, roster: Vec<Vec<Field>>) -> Vec<Vec<Field>> {
+// checks if the mouse is hovering above a square 
+fn check_roster_input(input: MouseButton, roster: Vec<Vec<Field>>) -> Vec<Vec<Field>> {
     let mut temp: Vec<Vec<Field>> = roster;
     for y in 0..temp.len() {
         for x in 0..temp[y].len() {
             if mouse_position().0 > temp[y][x].x && mouse_position().0 < temp[y][x].x + temp[y][x].size {
                 if mouse_position().1 > temp[y][x].y && mouse_position().1 < temp[y][x].y + temp[y][x].size {
-                    match input {
-                        MouseButton::Left => if temp[y][x].filled {
-                            temp[y][x].colour = EMPTY;
-                            temp[y][x].filled = false;
-                        } else {
-                            temp[y][x].colour = FILLED;
-                            temp[y][x].filled = true;
-                            temp[y][x].crossed = false;
-                        }
-                        MouseButton::Right => if temp[y][x].crossed {
-                            temp[y][x].colour = EMPTY;
-                            temp[y][x].crossed = false;
-                        } else {
-                            temp[y][x].colour = CROSSED;
-                            temp[y][x].filled = false;
-                            temp[y][x].crossed = true;
-                        }
-                        _ => continue
-                    }
+                    temp = update_roster(input, temp, x, y);
+                    break;
                 }
             }
         }
     }
     return temp;
 }
+
+// updates the roster
+fn update_roster(input: MouseButton, roster: Vec<Vec<Field>>, x: usize, y: usize) -> Vec<Vec<Field>> {
+    let mut temp: Vec<Vec<Field>> = roster;
+    match input {
+        MouseButton::Left => if temp[y][x].filled {
+            temp[y][x].colour = EMPTY;
+            temp[y][x].filled = false;
+        } else {
+            temp[y][x].colour = FILLED;
+            temp[y][x].filled = true;
+            temp[y][x].crossed = false;
+        }
+        MouseButton::Right => if temp[y][x].crossed {
+            temp[y][x].colour = EMPTY;
+            temp[y][x].crossed = false;
+        } else {
+            temp[y][x].colour = CROSSED;
+            temp[y][x].filled = false;
+            temp[y][x].crossed = true;
+        }
+        _ => todo!()
+    }
+    return temp
+}
+
