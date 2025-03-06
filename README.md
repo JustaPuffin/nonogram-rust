@@ -1,1 +1,1 @@
-# nonogram
+# Nonogram in Rust
