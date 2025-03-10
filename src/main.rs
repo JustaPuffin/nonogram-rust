@@ -1,15 +1,15 @@
 use macroquad::prelude::*;
 
+#[path ="nonograms/level.rs"]
+mod level;
 
-type ModeType: = i16;
+//type ModeType: = i16;
 
 
 const BACKGROUND: Color = BLACK; // Background colour
 const EMPTY: Color = WHITE; // Empty Square
 const FILLED: Color = BLUE; // Filled Square
 const CROSSED: Color = GRAY; // Crossed out Square
-
-
 
 // Used for squares in the nonogram roster
 struct Field {
@@ -23,9 +23,12 @@ struct Field {
     crossed: bool,
 }
 
+
+
 #[macroquad::main("Nonogram")]
 async fn main() {
     let mut roster= get_roster(25, 20, 20);
+    let test = level::get_nonogram("00", "00");
     loop {
         clear_background(BACKGROUND);
 
@@ -40,6 +43,9 @@ async fn main() {
 // gets a clear roster
 fn get_roster(width: usize, height: usize, size: usize)  -> Vec<Vec<Field>> {
     let mut roster: Vec<Vec<Field>> = vec![];
+
+    
+
     for y in 0..height {
         roster.push(vec![]);
         for x in 0..width {
@@ -52,7 +58,7 @@ fn get_roster(width: usize, height: usize, size: usize)  -> Vec<Vec<Field>> {
                     size: 20.0,
                     colour: EMPTY,
                     filled: false,
-                    crossed: false
+                    crossed: false,
                 }
             )
         }
