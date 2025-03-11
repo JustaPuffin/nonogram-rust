@@ -48,7 +48,7 @@ async fn main() {
     let grid = unsafe {level::get_data(PACK, LEVEL).grid};
     unsafe {
         HINTS_ROWS = get_nonogram_hint_rows(grid.clone());
-        HINTS_COLOUMNS = get_nonogram_hint_coloums(grid.clone());
+        //HINTS_COLOUMNS = get_nonogram_hint_coloums(grid.clone());
         ROSTER = get_nonogram_field(grid.clone());
     }
     
@@ -63,9 +63,7 @@ async fn main() {
                 }
                 next_frame().await;
             },
-            NONOGRAM_FINISHED => loop {
-                next_frame().await;
-            },
+            NONOGRAM_FINISHED => todo!("Need to implement how the finished nonogram gets coloured upon completion!"),
             _ => todo!(),
         }
         next_frame().await;
