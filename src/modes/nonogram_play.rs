@@ -1,27 +1,28 @@
 use macroquad::prelude::*;
 use macroquad::miniquad::window;
 use std::cmp;
-use crate::{PACK, LEVEL, ROSTER, Field};
-use crate::level::{LevelContent, DATA};
+use crate::{Field, Hint, HintPosition, HINTS_ROWS, LEVEL, PACK, ROSTER};
+use crate::level::DATA;
+
 
 const BACKGROUND        : Color     = Color { // Background colour
     r:  75.0 / 255.0,
     g:  91.0 / 255.0,
     b: 171.0 / 255.0,
     a:   1.0,
-}; 
+};
 const EMPTY             : Color     = Color { // Empty Square
     r: 255.0 / 255.0,
     g: 255.0 / 255.0,
     b: 235.0 / 255.0,
     a:   1.0,
-}; 
+};
 const FILLED            : Color     = Color { // Filled Square
     r:  77.0 / 255.0,
     g: 166.0 / 255.0,
     b: 255.0 / 255.0,
     a:   1.0,
-}; 
+};
 const CROSSED           : Color     = Color { // Crossed out Square
     r: 126.0 / 255.0,
     g: 126.0 / 255.0,
@@ -44,22 +45,24 @@ pub unsafe fn nonogram_play() {
     }
     
     draw_roster(ROSTER.clone());
+    draw_hint_rows(HINTS_ROWS.clone());
     
 }
 
 // gets a clear nonogram field
-pub fn get_nonogram_field(data: LevelContent<'static>)  -> Vec<Vec<Field>> {
+pub fn get_nonogram_field(grid: Vec<Vec<i8>>)  -> Vec<Vec<Field>> {
     let mut roster: Vec<Vec<Field>> = vec![];
-    let size = window::screen_size().0 / 2.0 / cmp::max(data.grid.len(), data.grid[0].len()) as f32;
+    let max = cmp::max(grid.len(), grid[0].len()) as f32;
+    let size = window::screen_size().0 / 4.0 / max;
     
 
-    for y in 0..data.grid.len() {
+    for y in 0..grid.len() {
         roster.push(vec![]);
-        for x in 0..data.grid[y].len() {
+        for x in 0..grid[y].len() {
             roster[y].push(
                 Field {
-                    x       : x as f32 * size + (x as f32 * 2.0),
-                    y       : y as f32 * size + (y as f32 * 2.0),
+                    x       : x as f32 * size + (x as f32 * 2.0) + size * (max + 1.0),
+                    y       : y as f32 * size + (y as f32 * 2.0) + size * (max + 1.0),
                     size    : size,
                     colour  : EMPTY,
                     filled  : 0,
@@ -73,6 +76,83 @@ pub fn get_nonogram_field(data: LevelContent<'static>)  -> Vec<Vec<Field>> {
     return roster;
 }
 
+// gets num rows of nonogram field
+pub fn get_nonogram_hint_rows(grid: Vec<Vec<i8>>) -> Vec<Vec<Hint>> {
+    let mut hint_rows: Vec<Vec<Hint>> = vec![];
+    let mut count: i8;
+    let max = cmp::max(grid.len(), grid[0].len()) as f32;
+    let size = window::screen_size().0 / 4.0 / max;
+
+    for y in 0..grid.len() {
+        hint_rows.push(vec![]);
+        count = 0;
+        for x in 0..grid[y].len() {
+            if grid[y][x] == 1 {count += 1}
+            else if count > 0 {
+                hint_rows[y].push(get_hint(x, y, size, HintPosition::Row, count, max));
+                count = 0;
+            }
+        }
+        if count > 0 || hint_rows[y].len() == 0 {hint_rows[y].push(get_hint(grid[y].len(), y, size, HintPosition::Row, count, max))}
+    }
+
+    return hint_rows;
+}
+
+// gets num coloumns of nonogram field
+pub fn get_nonogram_hint_coloums(grid: Vec<Vec<i8>>) -> Vec<Vec<Hint>> {
+    let mut hint_coloumns: Vec<Vec<Hint>> = vec![];
+    let mut count: i8;
+    let max = cmp::max(grid.len(), grid[0].len()) as f32;
+    let size = window::screen_size().0 / 4.0 / cmp::max(grid.len(), grid[0].len()) as f32;
+
+    for x in 0..grid[0].len() {
+        hint_coloumns.push(vec![]);
+        count = 0;
+        for y in 0..grid.len() {
+            if grid[y][x] == 1 {count += 1}
+            else if count > 0 {
+                hint_coloumns[y].push(get_hint(x, y, size, HintPosition::Coloumn, count, max));
+                count = 0;
+            }
+        }
+        if count > 0 || hint_coloumns[x].len() == 0 {hint_coloumns[x].push(get_hint(x, grid[x].len(), size, HintPosition::Coloumn, count, max))}
+    }
+
+    return hint_coloumns;
+}
+
+// returns a Hint struct from provided contents
+fn get_hint(x: usize, y: usize, size: f32, position: HintPosition, value: i8, max: f32) -> Hint {
+    match position {
+        HintPosition::Row       => return Hint {
+            data    : Field {
+                x       : x as f32 * size + (x as f32 * 2.0),
+                y       : y as f32 * size + (y as f32 * 2.0) + size * (max + 1.75),
+                size    : size,
+                colour  : EMPTY,
+                filled  : 0,
+                crossed : 0,
+            },
+            position: position,
+            value   : value,
+        },
+        HintPosition::Coloumn   => return Hint {
+            data    : Field {
+                x       : x as f32 * size + (x as f32 * 2.0) + size * (max + 1.75),
+                y       : y as f32 * size + (y as f32 * 2.0),
+                size    : size,
+                colour  : EMPTY,
+                filled  : 0,
+                crossed : 0,
+            },
+            position: position,
+            value   : value,
+        },
+    }
+    
+}
+
 // draws a square matrix
 pub fn draw_roster(roster: Vec<Vec<Field>>) {
     //let size = window::screen_size().0 / 2.0 / cmp::max(roster.len(), roster[0].len()) as f32;
@@ -84,9 +164,22 @@ pub fn draw_roster(roster: Vec<Vec<Field>>) {
                 roster[y][x].y,
                 roster[y][x].size,
                 roster[y][x].size,
-                //window::screen_size().0 / 2.0 / cmp::max(roster.len(), roster[y].len()) as f32,
-                //window::screen_size().1 / 2.0 / cmp::max(roster.len(), roster[y].len()) as f32,
                 roster[y][x].colour,
+            );
+        }
+    }
+}
+
+
+pub fn draw_hint_rows(hints: Vec<Vec<Hint>>) {
+    for y in 0..hints.len() {
+        for x in 0..hints[y].len() {
+            draw_text(
+                &hints[y][x].value.to_string(),
+                hints[y][x].data.x,
+                hints[y][x].data.y,
+                hints[y][x].data.size,
+                hints[y][x].data.colour,
             );
         }
     }
@@ -138,7 +231,7 @@ pub unsafe fn update_roster(input: MouseButton, roster: Vec<Vec<Field>>, x: usiz
     return temp
 }
 
-
+// checks to see if the nonogram has been solved
 pub unsafe fn check_roster_state(roster: Vec<Vec<Field>>, pack: usize, level: usize) -> bool {
     for y in 0..roster.len() {
         for x in 0..roster[y].len() {
@@ -149,3 +242,4 @@ pub unsafe fn check_roster_state(roster: Vec<Vec<Field>>, pack: usize, level: us
     }
     return true
 }
+
