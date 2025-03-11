@@ -1,12 +1,12 @@
-use std::sync::LazyLock;
-use macroquad::prelude::*;
+use std::{sync::LazyLock, time::{self, Duration}};
 
 pub struct LevelContent<'a> {
     pub name: &'a str,
-    pub grid: Vec<Vec<i32>>,
+    pub grid: Vec<Vec<i8>>,
+    pub time: time::Duration,
 }
 
-pub const DATA: LazyLock<Vec<Vec<LevelContent>>> = LazyLock::new(||
+pub static mut DATA: LazyLock<Vec<Vec<LevelContent>>> = LazyLock::new(||
     vec![                   // Level Collection
         vec![               // Level Pack   00
             LevelContent {  // Level        00
@@ -18,15 +18,17 @@ pub const DATA: LazyLock<Vec<Vec<LevelContent>>> = LazyLock::new(||
                     vec![1,0,0,0,1],
                     vec![0,1,1,1,0],
                 ],
+                time: Duration::from_secs(0),
             },
         ],
     ]);
 
 // gets data for a nonogram
-pub fn get_data(pack: usize, level: usize) -> LevelContent<'static> {
+pub unsafe fn get_data(pack: usize, level: usize) -> LevelContent<'static> {
     let puzzle = LevelContent {
         name: DATA[pack][level].name,
         grid: DATA[pack][level].grid.clone(),
+        time: DATA[pack][level].time,
     };
     println!("Level name: {}", DATA[pack][level].name);
     return puzzle;
