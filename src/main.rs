@@ -1,4 +1,5 @@
 use macroquad::prelude::*;
+use crate::level::LevelContent;
 
 #[path ="nonograms/level.rs"]
 mod level;
@@ -15,8 +16,6 @@ const CROSSED: Color = GRAY; // Crossed out Square
 struct Field {
     x: f32,
     y: f32,
-    w: f32,
-    h: f32,
     size: f32,
     colour: Color,
     filled: bool,
@@ -27,8 +26,7 @@ struct Field {
 
 #[macroquad::main("Nonogram")]
 async fn main() {
-    let mut roster= get_roster(25, 20, 20);
-    let test = level::get_nonogram("00", "00");
+    let mut roster= get_nonogram(level::get_data(0, 0));
     loop {
         clear_background(BACKGROUND);
 
@@ -41,20 +39,18 @@ async fn main() {
 }
 
 // gets a clear roster
-fn get_roster(width: usize, height: usize, size: usize)  -> Vec<Vec<Field>> {
+fn get_nonogram(data: LevelContent<'static>)  -> Vec<Vec<Field>> {
     let mut roster: Vec<Vec<Field>> = vec![];
 
     
 
-    for y in 0..height {
+    for y in 0..data.grid.len() {
         roster.push(vec![]);
-        for x in 0..width {
+        for x in 0..data.grid[y].len() {
             roster[y].push(
                 Field {
                     x: x as f32 * 20.0 + (x as f32 * 2.0),
                     y: y as f32 * 20.0 + (y as f32 * 2.0),
-                    w: size as f32,
-                    h: size as f32,
                     size: 20.0,
                     colour: EMPTY,
                     filled: false,
@@ -75,8 +71,8 @@ fn draw_roster(roster: &Vec<Vec<Field>>) {
             draw_rectangle(
                 roster[y][x].x,
                 roster[y][x].y,
-                roster[y][x].w,
-                roster[y][x].h,
+                roster[y][x].size,
+                roster[y][x].size,
                 roster[y][x].colour,
             );
         }
