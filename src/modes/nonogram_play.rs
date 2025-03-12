@@ -1,7 +1,7 @@
 use macroquad::prelude::*;
 use macroquad::miniquad::window;
 use std::cmp;
-use crate::{Field, Hint, HintPosition, HINTS_ROWS, LEVEL, PACK, ROSTER};
+use crate::{Field, Hint, HintPosition, HINTS_COLOUMNS, HINTS_ROWS, LEVEL, PACK, ROSTER};
 use crate::level::DATA;
 
 
@@ -46,11 +46,11 @@ pub unsafe fn nonogram_play() {
     
     draw_roster(ROSTER.clone());
     draw_hint_rows(HINTS_ROWS.clone());
-    
+    draw_hint_coloumns(HINTS_COLOUMNS.clone());
 }
 
 // gets a clear nonogram field
-pub fn get_nonogram_field(grid: Vec<Vec<i8>>)  -> Vec<Vec<Field>> {
+pub fn get_nonogram_field(grid: Vec<Vec<i8>>) -> Vec<Vec<Field>> {
     let mut roster: Vec<Vec<Field>> = vec![];
     let max = cmp::max(grid.len(), grid[0].len()) as f32;
     let size = window::screen_size().0 / 4.0 / max;
@@ -76,10 +76,11 @@ pub fn get_nonogram_field(grid: Vec<Vec<i8>>)  -> Vec<Vec<Field>> {
     return roster;
 }
 
-// gets num rows of nonogram field
+// gets num for rows of nonogram field
 pub fn get_nonogram_hint_rows(grid: Vec<Vec<i8>>) -> Vec<Vec<Hint>> {
     let mut hint_rows: Vec<Vec<Hint>> = vec![];
     let mut count: i8;
+    let mut temp: usize;
     let max = cmp::max(grid.len(), grid[0].len()) as f32;
     let size = window::screen_size().0 / 4.0 / max;
 
@@ -89,36 +90,59 @@ pub fn get_nonogram_hint_rows(grid: Vec<Vec<i8>>) -> Vec<Vec<Hint>> {
         for x in 0..grid[y].len() {
             if grid[y][x] == 1 {count += 1}
             else if count > 0 {
-                hint_rows[y].push(get_hint(x, y, size, HintPosition::Row, count, max));
+                temp = hint_rows[y].len();
+                hint_rows[y].push(get_hint(grid[y].len() - temp, y, size, HintPosition::Row, count, max));
                 count = 0;
             }
         }
-        if count > 0 || hint_rows[y].len() == 0 {hint_rows[y].push(get_hint(grid[y].len(), y, size, HintPosition::Row, count, max))}
+        if count > 0 || hint_rows[y].len() == 0 {
+            temp = hint_rows[y].len();
+            hint_rows[y].push(get_hint(grid[y].len() - temp, y, size, HintPosition::Row, count, max));
+        }
     }
-
     return hint_rows;
 }
 
-// gets num coloumns of nonogram field
+// gets num for coloumns of nonogram field
 pub fn get_nonogram_hint_coloums(grid: Vec<Vec<i8>>) -> Vec<Vec<Hint>> {
     let mut hint_coloumns: Vec<Vec<Hint>> = vec![];
     let mut count: i8;
+    let mut temp: usize;
     let max = cmp::max(grid.len(), grid[0].len()) as f32;
-    let size = window::screen_size().0 / 4.0 / cmp::max(grid.len(), grid[0].len()) as f32;
+    let size = window::screen_size().0 / 4.0 / max;
 
-    for x in 0..grid[0].len() {
+    for x in 0..grid.len() {
         hint_coloumns.push(vec![]);
         count = 0;
         for y in 0..grid.len() {
             if grid[y][x] == 1 {count += 1}
             else if count > 0 {
-                hint_coloumns[y].push(get_hint(x, y, size, HintPosition::Coloumn, count, max));
+                temp = grid[x].len() - hint_coloumns[x].len();
+                hint_coloumns[x].push(get_hint(x, temp, size, HintPosition::Coloumn, count, max));
                 count = 0;
             }
         }
-        if count > 0 || hint_coloumns[x].len() == 0 {hint_coloumns[x].push(get_hint(x, grid[x].len(), size, HintPosition::Coloumn, count, max))}
+        if count > 0 || hint_coloumns.len() == 0 {
+            temp = grid[x].len() - hint_coloumns[x].len();
+            hint_coloumns[x].push(get_hint(x, temp, size, HintPosition::Coloumn, count, max));
+        }
     }
 
+    /*for y in 0..grid.len() {
+        if hint_coloumns[y].len() > 1 {
+            println!("{:?}", hint_coloumns[y].len());
+            for x in 0..grid[y].len() / 2 {
+                temp = hint_coloumns[y].len()-1-x;
+                count = hint_coloumns[y][x].value;
+                println!("count: {:?}, val l: {:?}, val r: {:?}", count, hint_coloumns[y][x].value, hint_coloumns[y][temp].value);
+                hint_coloumns[y][x].value = hint_coloumns[y][temp].value;
+                println!("count: {:?}, val l: {:?}, val r: {:?}", count, hint_coloumns[y][x].value, hint_coloumns[y][temp].value);
+                hint_coloumns[y][temp].value = count;
+                println!("count: {:?}, val l: {:?}, val r: {:?}", count, hint_coloumns[y][x].value, hint_coloumns[y][temp].value);
+            }
+        }
+    }*/
+    println!("{hint_coloumns:?}");
     return hint_coloumns;
 }
 
@@ -139,7 +163,7 @@ fn get_hint(x: usize, y: usize, size: f32, position: HintPosition, value: i8, ma
         },
         HintPosition::Coloumn   => return Hint {
             data    : Field {
-                x       : x as f32 * size + (x as f32 * 2.0) + size * (max + 1.75),
+                x       : x as f32 * size + (x as f32 * 2.0) + size * (max + 1.25),
                 y       : y as f32 * size + (y as f32 * 2.0),
                 size    : size,
                 colour  : EMPTY,
@@ -170,8 +194,23 @@ pub fn draw_roster(roster: Vec<Vec<Field>>) {
     }
 }
 
-
+// draws hints for each row
 pub fn draw_hint_rows(hints: Vec<Vec<Hint>>) {
+    for y in 0..hints.len() {
+        for x in 0..hints[y].len() {
+            draw_text(
+                &hints[y][x].value.to_string(),
+                hints[y][x].data.x,
+                hints[y][x].data.y,
+                hints[y][x].data.size,
+                hints[y][x].data.colour,
+            );
+        }
+    }
+}
+
+// draws hints for each coloumn
+pub fn draw_hint_coloumns(hints: Vec<Vec<Hint>>) {
     for y in 0..hints.len() {
         for x in 0..hints[y].len() {
             draw_text(
