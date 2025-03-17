@@ -1,9 +1,19 @@
 use macroquad::prelude::*;
 use macroquad::miniquad::window;
 use std::cmp;
-use crate::{Field, Hint, HintPosition, HINTS_COLOUMNS, HINTS_ROWS, LEVEL, PACK, ROSTER};
-use crate::level::DATA;
 
+use crate::{
+    Field,
+    Hint,
+    HintPosition,
+    HINTS_COLOUMNS,
+    HINTS_ROWS,
+    LEVEL,
+    PACK,
+    ROSTER,
+
+    level::DATA,
+};
 
 const BACKGROUND        : Color     = Color { // Background colour
     r:  75.0 / 255.0,
@@ -33,7 +43,6 @@ const CROSSED           : Color     = Color { // Crossed out Square
 
 // function used for the mode NONOGRAM_PLAY
 pub unsafe fn nonogram_play() {
-
     clear_background(BACKGROUND);
 
     if is_mouse_button_pressed(MouseButton::Left) {
@@ -49,6 +58,38 @@ pub unsafe fn nonogram_play() {
     draw_hint_coloumns(HINTS_COLOUMNS.clone());
 }
 
+// function used for the mode NONOGRAM_FINISHED
+pub async unsafe fn nonogram_finished(pack: usize, level: usize) {
+    let path = format!("src/nonograms/pack-{:?}/level-{:?}/solved/", pack, level);
+    let solved_nonogram: Texture2D;
+
+    clear_background(BACKGROUND);
+    
+    draw_roster(ROSTER.clone());
+    draw_hint_rows(HINTS_ROWS.clone());
+    draw_hint_coloumns(HINTS_COLOUMNS.clone());
+
+    solved_nonogram = load_texture(&(path + &(get_time() as i16 % 16).to_string() + ".png")).await.unwrap();
+    solved_nonogram.set_filter(FilterMode::Nearest);
+    draw_texture_ex(
+        &solved_nonogram,
+        0.0,
+        0.0,
+        WHITE,
+        DrawTextureParams {
+            dest_size: Some(vec2(300.0, 300.0)),
+            source: None,
+            rotation: 0.0,
+            flip_x: false,
+            flip_y: false,
+            pivot: None,
+        }
+    );
+
+}
+
+
+
 // gets a clear nonogram field
 pub fn get_nonogram_field(grid: Vec<Vec<i8>>) -> Vec<Vec<Field>> {
     let mut roster: Vec<Vec<Field>> = vec![];
@@ -61,8 +102,8 @@ pub fn get_nonogram_field(grid: Vec<Vec<i8>>) -> Vec<Vec<Field>> {
         for x in 0..grid[y].len() {
             roster[y].push(
                 Field {
-                    x       : x as f32 * size + (x as f32 * 2.0) + size * (max + 1.0),
-                    y       : y as f32 * size + (y as f32 * 2.0) + size * (max + 1.0),
+                    x       : x as f32 * size + size * (max + 1.0),
+                    y       : y as f32 * size + size * (max + 1.0),
                     size    : size,
                     colour  : EMPTY,
                     filled  : 0,
@@ -131,24 +172,8 @@ pub fn get_nonogram_hint_coloums(grid: Vec<Vec<i8>>) -> Vec<Vec<Hint>> {
             temp_y = grid[x].len() - hint_coloumns[temp_x].len();
             hint_coloumns[temp_x].push(get_hint(x, temp_y, size, HintPosition::Coloumn, count, max));
         }
-        //println!("{:#?}", hint_coloumns[x]);
     }
 
-    /*for y in 0..grid.len() {
-        if hint_coloumns[y].len() > 1 {
-            println!("{:?}", hint_coloumns[y].len());
-            for x in 0..grid[y].len() / 2 {
-                temp = hint_coloumns[y].len()-1-x;
-                count = hint_coloumns[y][x].value;
-                println!("count: {:?}, val l: {:?}, val r: {:?}", count, hint_coloumns[y][x].value, hint_coloumns[y][temp].value);
-                hint_coloumns[y][x].value = hint_coloumns[y][temp].value;
-                println!("count: {:?}, val l: {:?}, val r: {:?}", count, hint_coloumns[y][x].value, hint_coloumns[y][temp].value);
-                hint_coloumns[y][temp].value = count;
-                println!("count: {:?}, val l: {:?}, val r: {:?}", count, hint_coloumns[y][x].value, hint_coloumns[y][temp].value);
-            }
-        }
-    }*/
-    println!("{hint_coloumns:?}");
     return hint_coloumns;
 }
 
@@ -157,8 +182,8 @@ fn get_hint(x: usize, y: usize, size: f32, position: HintPosition, value: i8, ma
     match position {
         HintPosition::Row       => return Hint {
             data    : Field {
-                x       : x as f32 * size + (x as f32 * 2.0),
-                y       : y as f32 * size + (y as f32 * 2.0) + size * (max + 1.75),
+                x       : x as f32 * size,
+                y       : y as f32 * size + size * (max + 1.75),
                 size    : size,
                 colour  : EMPTY,
                 filled  : 0,
@@ -169,8 +194,8 @@ fn get_hint(x: usize, y: usize, size: f32, position: HintPosition, value: i8, ma
         },
         HintPosition::Coloumn   => return Hint {
             data    : Field {
-                x       : x as f32 * size + (x as f32 * 2.0) + size * (max + 1.25),
-                y       : y as f32 * size + (y as f32 * 2.0),
+                x       : x as f32 * size + size * (max + 1.25),
+                y       : y as f32 * size,
                 size    : size,
                 colour  : EMPTY,
                 filled  : 0,
@@ -195,6 +220,14 @@ pub fn draw_roster(roster: Vec<Vec<Field>>) {
                 roster[y][x].size,
                 roster[y][x].size,
                 roster[y][x].colour,
+            );
+            draw_rectangle_lines(
+                roster[y][x].x,
+                roster[y][x].y,
+                roster[y][x].size,
+                roster[y][x].size,
+                2.0,
+                BACKGROUND,
             );
         }
     }

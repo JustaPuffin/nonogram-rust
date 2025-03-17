@@ -1,16 +1,14 @@
 use macroquad::prelude::*;
-use nonogram_play::{check_roster_state, get_nonogram_field, get_nonogram_hint_coloums, get_nonogram_hint_rows, nonogram_play};
-
 
 #[path ="nonograms/level.rs"] mod level;
-#[path ="modes/nonogram_play.rs"] mod nonogram_play;
+#[path ="modes/nonogram.rs"] mod nonogram;
 
 type ModeType = i16;
 
-const MENU_MAIN : ModeType = 0;
-const MENU_PACK : ModeType = 1;
-const MENU_LEVEL : ModeType = 2;
-const MENU_OPTIONS : ModeType = 3;
+//const MENU_MAIN : ModeType = 0;
+//const MENU_PACK : ModeType = 1;
+//const MENU_LEVEL : ModeType = 2;
+//const MENU_OPTIONS : ModeType = 3;
 const NONOGRAM_PLAY : ModeType = 4;
 const NONOGRAM_FINISHED : ModeType = 5;
 
@@ -46,24 +44,24 @@ static mut HINTS_COLOUMNS : Vec<Vec<Hint>> = vec![];
     let mut mode: ModeType  = NONOGRAM_PLAY;
     let grid = unsafe {level::get_data(PACK, LEVEL).grid};
     unsafe {
-        HINTS_ROWS = get_nonogram_hint_rows(grid.clone());
-        HINTS_COLOUMNS = get_nonogram_hint_coloums(grid.clone());
-        ROSTER = get_nonogram_field(grid.clone());
+        HINTS_ROWS = nonogram::get_nonogram_hint_rows(grid.clone());
+        HINTS_COLOUMNS = nonogram::get_nonogram_hint_coloums(grid.clone());
+        ROSTER = nonogram::get_nonogram_field(grid.clone());
     }
-    
     
     loop {
         match mode {
             NONOGRAM_PLAY => loop {
-                unsafe{nonogram_play()};
-                if unsafe {check_roster_state(ROSTER.clone(), PACK, LEVEL)} {
+                unsafe{nonogram::nonogram_play()};
+                if unsafe {nonogram::check_roster_state(ROSTER.clone(), PACK, LEVEL)} {
                     mode = NONOGRAM_FINISHED;
                     break;
                 }
-                next_frame().await;
-            },
-            NONOGRAM_FINISHED => todo!("Need to implement how the finished nonogram gets coloured upon completion!"),
-            _ => todo!(),
+                next_frame().await}
+            NONOGRAM_FINISHED => loop {
+                unsafe {nonogram::nonogram_finished(PACK, LEVEL).await;};
+                next_frame().await}
+            _ => todo!("Mode {:?} doesn't exist or isn't implemented yet", mode),
         }
         next_frame().await;
     }

@@ -1,9 +1,9 @@
-use std::{sync::LazyLock, time::{self, Duration}};
+use std::sync::LazyLock;
 
 pub struct LevelContent<'a> {
     pub name: &'a str,
     pub grid: Vec<Vec<i8>>,
-    pub time: time::Duration,
+    pub frames: i16,
 }
 
 pub static mut DATA: LazyLock<Vec<Vec<LevelContent>>> = LazyLock::new(||
@@ -18,7 +18,7 @@ pub static mut DATA: LazyLock<Vec<Vec<LevelContent>>> = LazyLock::new(||
                     vec![1,0,0,0,1],
                     vec![0,1,1,1,0],
                 ],
-                time: Duration::from_secs(0),
+                frames: 16,
             },
         ],
     ]);
@@ -28,7 +28,7 @@ pub unsafe fn get_data(pack: usize, level: usize) -> LevelContent<'static> {
     let puzzle = LevelContent {
         name: DATA[pack][level].name,
         grid: DATA[pack][level].grid.clone(),
-        time: DATA[pack][level].time,
+        frames: DATA[pack][level].frames,
     };
     println!("Level name: {}", DATA[pack][level].name);
     return puzzle;
