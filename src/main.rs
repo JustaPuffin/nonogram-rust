@@ -42,7 +42,9 @@ static mut HINTS_COLOUMNS : Vec<Vec<Hint>> = vec![];
 
 #[macroquad::main("Nonogram")] async fn main() {
     let mut mode: ModeType  = NONOGRAM_PLAY;
+    let mut nonogram_end: f64;
     let grid = unsafe {level::get_data(PACK, LEVEL).grid};
+
     unsafe {
         HINTS_ROWS = nonogram::get_nonogram_hint_rows(grid.clone());
         HINTS_COLOUMNS = nonogram::get_nonogram_hint_coloums(grid.clone());
@@ -58,9 +60,12 @@ static mut HINTS_COLOUMNS : Vec<Vec<Hint>> = vec![];
                     break;
                 }
                 next_frame().await}
-            NONOGRAM_FINISHED => loop {
-                unsafe {nonogram::nonogram_finished(PACK, LEVEL).await;};
-                next_frame().await}
+            NONOGRAM_FINISHED => {
+                nonogram_end = get_time();
+                loop {
+                    unsafe {nonogram::nonogram_finished(PACK, LEVEL, nonogram_end).await;};
+                    next_frame().await}}
+
             _ => todo!("Mode {:?} doesn't exist or isn't implemented yet", mode),
         }
         next_frame().await;
