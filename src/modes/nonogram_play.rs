@@ -80,24 +80,26 @@ pub fn get_nonogram_field(grid: Vec<Vec<i8>>) -> Vec<Vec<Field>> {
 pub fn get_nonogram_hint_rows(grid: Vec<Vec<i8>>) -> Vec<Vec<Hint>> {
     let mut hint_rows: Vec<Vec<Hint>> = vec![];
     let mut count: i8;
-    let mut temp: usize;
+    let mut temp_x: usize;
+    let mut temp_y: usize;
     let max = cmp::max(grid.len(), grid[0].len()) as f32;
     let size = window::screen_size().0 / 4.0 / max;
 
-    for y in 0..grid.len() {
+    for y in (0..grid.len()).rev() {
         hint_rows.push(vec![]);
+        temp_y = hint_rows.len()-1;
         count = 0;
-        for x in 0..grid[y].len() {
+        for x in (0..grid[y].len()).rev() {
             if grid[y][x] == 1 {count += 1}
             else if count > 0 {
-                temp = hint_rows[y].len();
-                hint_rows[y].push(get_hint(grid[y].len() - temp, y, size, HintPosition::Row, count, max));
+                temp_x = grid[y].len() - hint_rows[temp_y].len();
+                hint_rows[temp_y].push(get_hint(temp_x, y, size, HintPosition::Row, count, max));
                 count = 0;
             }
         }
-        if count > 0 || hint_rows[y].len() == 0 {
-            temp = hint_rows[y].len();
-            hint_rows[y].push(get_hint(grid[y].len() - temp, y, size, HintPosition::Row, count, max));
+        if count > 0 || hint_rows[temp_y].len() == 0 {
+            temp_x = grid[y].len() - hint_rows[temp_y].len();
+            hint_rows[temp_y].push(get_hint(temp_x, y, size, HintPosition::Row, count, max));
         }
     }
     return hint_rows;
@@ -107,25 +109,29 @@ pub fn get_nonogram_hint_rows(grid: Vec<Vec<i8>>) -> Vec<Vec<Hint>> {
 pub fn get_nonogram_hint_coloums(grid: Vec<Vec<i8>>) -> Vec<Vec<Hint>> {
     let mut hint_coloumns: Vec<Vec<Hint>> = vec![];
     let mut count: i8;
-    let mut temp: usize;
+    let mut temp_x: usize;
+    let mut temp_y: usize;
     let max = cmp::max(grid.len(), grid[0].len()) as f32;
     let size = window::screen_size().0 / 4.0 / max;
 
-    for x in 0..grid.len() {
+    for x in (0..grid.len()).rev() {
         hint_coloumns.push(vec![]);
+        temp_x = hint_coloumns.len()-1;
         count = 0;
-        for y in 0..grid.len() {
+        for y in (0..grid[x].len()).rev() {
             if grid[y][x] == 1 {count += 1}
             else if count > 0 {
-                temp = grid[x].len() - hint_coloumns[x].len();
-                hint_coloumns[x].push(get_hint(x, temp, size, HintPosition::Coloumn, count, max));
+                
+                temp_y = grid[x].len() - hint_coloumns[temp_x].len();
+                hint_coloumns[temp_x].push(get_hint(x, temp_y, size, HintPosition::Coloumn, count, max));
                 count = 0;
             }
         }
-        if count > 0 || hint_coloumns.len() == 0 {
-            temp = grid[x].len() - hint_coloumns[x].len();
-            hint_coloumns[x].push(get_hint(x, temp, size, HintPosition::Coloumn, count, max));
+        if count > 0 || hint_coloumns[temp_x].len() == 0 {
+            temp_y = grid[x].len() - hint_coloumns[temp_x].len();
+            hint_coloumns[temp_x].push(get_hint(x, temp_y, size, HintPosition::Coloumn, count, max));
         }
+        //println!("{:#?}", hint_coloumns[x]);
     }
 
     /*for y in 0..grid.len() {
