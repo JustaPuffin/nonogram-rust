@@ -1,4 +1,5 @@
 use macroquad::prelude::*;
+use macroquad::miniquad::window;
 
 #[path ="nonograms/level.rs"] mod level;
 #[path ="modes/nonogram.rs"] mod nonogram;
@@ -12,11 +13,15 @@ type ModeType = i16;
 const NONOGRAM_PLAY : ModeType = 4;
 const NONOGRAM_FINISHED : ModeType = 5;
 
+
 static mut PACK : usize = 0;
 static mut LEVEL : usize = 0;
 static mut ROSTER : Vec<Vec<Field>> = vec![];
 static mut HINTS_ROWS : Vec<Vec<Hint>> = vec![];
 static mut HINTS_COLOUMNS : Vec<Vec<Hint>> = vec![];
+
+
+
 
 #[derive(Clone, Debug)] enum HintPosition {
     Row,
@@ -26,7 +31,6 @@ static mut HINTS_COLOUMNS : Vec<Vec<Hint>> = vec![];
 // Used for hints for the nonogram roster
 #[derive(Clone, Debug)] struct Hint {
     data    : Field,
-    position: HintPosition,
     value   : i8,
 }
 
@@ -42,7 +46,9 @@ static mut HINTS_COLOUMNS : Vec<Vec<Hint>> = vec![];
 
 #[macroquad::main("Nonogram")] async fn main() {
     let mut mode: ModeType  = NONOGRAM_PLAY;
-    let mut nonogram_end: f64;
+    let mut nonogram_time = String::new();
+    let nonogram_start = get_time();
+    let nonogram_end: f64;
     let grid = unsafe {level::get_data(PACK, LEVEL).grid};
 
     unsafe {
@@ -53,17 +59,24 @@ static mut HINTS_COLOUMNS : Vec<Vec<Hint>> = vec![];
     
     loop {
         match mode {
-            NONOGRAM_PLAY => loop {
+            NONOGRAM_PLAY => {
+                loop {
                 unsafe{nonogram::nonogram_play()};
+                nonogram_time = "Time: ".to_owned()
+                + &((get_time() - nonogram_start) as i32 / 3600 % 60).to_string() + ":"
+                + &((get_time() - nonogram_start) as i32 / 60 % 60).to_string() + ":"
+                + &((get_time() - nonogram_start) as i32 % 60).to_string();
+                draw_text(&nonogram_time, 20.0, window::screen_size().1 - 20.0, window::screen_size().0 / 20.0, WHITE);
                 if unsafe {nonogram::check_roster_state(ROSTER.clone(), PACK, LEVEL)} {
                     mode = NONOGRAM_FINISHED;
                     break;
                 }
-                next_frame().await}
+                next_frame().await}}
             NONOGRAM_FINISHED => {
                 nonogram_end = get_time();
                 loop {
                     unsafe {nonogram::nonogram_finished(PACK, LEVEL, nonogram_end).await;};
+                    draw_text(&nonogram_time, 20.0, window::screen_size().1 - 20.0, window::screen_size().0 / 20.0, WHITE);
                     next_frame().await}}
 
             _ => todo!("Mode {:?} doesn't exist or isn't implemented yet", mode),

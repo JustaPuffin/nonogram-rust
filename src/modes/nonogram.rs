@@ -60,6 +60,7 @@ pub unsafe fn nonogram_play() {
 
 // function used for the mode NONOGRAM_FINISHED
 pub async unsafe fn nonogram_finished(pack: usize, level: usize, time_of_finish: f64) {
+    let size = window::screen_size().0 / 4.0;
     let path = format!("src/nonograms/pack-{:?}/level-{:?}/solved/", pack, level);
     let solved_nonogram: Texture2D;
 
@@ -73,11 +74,11 @@ pub async unsafe fn nonogram_finished(pack: usize, level: usize, time_of_finish:
     solved_nonogram.set_filter(FilterMode::Nearest);
     draw_texture_ex(
         &solved_nonogram,
-        0.0,
-        0.0,
+        ROSTER[0][0].x,
+        ROSTER[0][0].y,
         WHITE,
         DrawTextureParams {
-            dest_size: Some(vec2(300.0, 300.0)),
+            dest_size: Some(vec2(size, size)),
             source: None,
             rotation: 0.0,
             flip_x: false,
@@ -93,8 +94,7 @@ pub async unsafe fn nonogram_finished(pack: usize, level: usize, time_of_finish:
 // gets a clear nonogram field
 pub fn get_nonogram_field(grid: Vec<Vec<i8>>) -> Vec<Vec<Field>> {
     let mut roster: Vec<Vec<Field>> = vec![];
-    let max = cmp::max(grid.len(), grid[0].len()) as f32;
-    let size = window::screen_size().0 / 4.0 / max;
+    let size = window::screen_size().0 / 4.0 / cmp::max(grid.len(), grid[0].len()) as f32;
     
 
     for y in 0..grid.len() {
@@ -102,8 +102,8 @@ pub fn get_nonogram_field(grid: Vec<Vec<i8>>) -> Vec<Vec<Field>> {
         for x in 0..grid[y].len() {
             roster[y].push(
                 Field {
-                    x       : x as f32 * size + size * (max + 1.0),
-                    y       : y as f32 * size + size * (max + 1.0),
+                    x       : x as f32 * size + (window::screen_size().0 - grid.len() as f32 * size) / 2.0,
+                    y       : y as f32 * size + (window::screen_size().1 - grid[y].len() as f32 * size) / 2.0,
                     size    : size,
                     colour  : EMPTY,
                     filled  : 0,
@@ -123,8 +123,7 @@ pub fn get_nonogram_hint_rows(grid: Vec<Vec<i8>>) -> Vec<Vec<Hint>> {
     let mut count: i8;
     let mut temp_x: usize;
     let mut temp_y: usize;
-    let max = cmp::max(grid.len(), grid[0].len()) as f32;
-    let size = window::screen_size().0 / 4.0 / max;
+    let size = window::screen_size().0 / 4.0 / cmp::max(grid.len(), grid[0].len()) as f32;
 
     for y in (0..grid.len()).rev() {
         hint_rows.push(vec![]);
@@ -133,14 +132,14 @@ pub fn get_nonogram_hint_rows(grid: Vec<Vec<i8>>) -> Vec<Vec<Hint>> {
         for x in (0..grid[y].len()).rev() {
             if grid[y][x] == 1 {count += 1}
             else if count > 0 {
-                temp_x = grid[y].len() - hint_rows[temp_y].len();
-                hint_rows[temp_y].push(get_hint(temp_x, y, size, HintPosition::Row, count, max));
+                temp_x = grid[y].len() - hint_rows[temp_y].len() + 2;
+                hint_rows[temp_y].push(unsafe {get_hint(temp_x, y, size, HintPosition::Row, count)});
                 count = 0;
             }
         }
         if count > 0 || hint_rows[temp_y].len() == 0 {
-            temp_x = grid[y].len() - hint_rows[temp_y].len();
-            hint_rows[temp_y].push(get_hint(temp_x, y, size, HintPosition::Row, count, max));
+            temp_x = grid[y].len() - hint_rows[temp_y].len() + 2;
+            hint_rows[temp_y].push(unsafe {get_hint(temp_x, y, size, HintPosition::Row, count)});
         }
     }
     return hint_rows;
@@ -164,13 +163,13 @@ pub fn get_nonogram_hint_coloums(grid: Vec<Vec<i8>>) -> Vec<Vec<Hint>> {
             else if count > 0 {
                 
                 temp_y = grid[x].len() - hint_coloumns[temp_x].len();
-                hint_coloumns[temp_x].push(get_hint(x, temp_y, size, HintPosition::Coloumn, count, max));
+                hint_coloumns[temp_x].push(unsafe {get_hint(x, temp_y, size, HintPosition::Coloumn, count)});
                 count = 0;
             }
         }
         if count > 0 || hint_coloumns[temp_x].len() == 0 {
             temp_y = grid[x].len() - hint_coloumns[temp_x].len();
-            hint_coloumns[temp_x].push(get_hint(x, temp_y, size, HintPosition::Coloumn, count, max));
+            hint_coloumns[temp_x].push(unsafe {get_hint(x, temp_y, size, HintPosition::Coloumn, count)});
         }
     }
 
@@ -178,30 +177,28 @@ pub fn get_nonogram_hint_coloums(grid: Vec<Vec<i8>>) -> Vec<Vec<Hint>> {
 }
 
 // returns a Hint struct from provided contents
-fn get_hint(x: usize, y: usize, size: f32, position: HintPosition, value: i8, max: f32) -> Hint {
+unsafe fn get_hint(x: usize, y: usize, size: f32, position: HintPosition, value: i8) -> Hint {
     match position {
         HintPosition::Row       => return Hint {
             data    : Field {
-                x       : x as f32 * size,
-                y       : y as f32 * size + size * (max + 1.75),
+                x       : (x as f32 - 0.5) * size,
+                y       : (y as f32 - 1.75) * size + (window::screen_size().1 - ROSTER.len() as f32 * size) / 2.0,
                 size    : size,
                 colour  : EMPTY,
                 filled  : 0,
                 crossed : 0,
             },
-            position: position,
             value   : value,
         },
         HintPosition::Coloumn   => return Hint {
             data    : Field {
-                x       : x as f32 * size + size * (max + 1.25),
-                y       : y as f32 * size,
+                x       : (x as f32 - 2.25) * size + (window::screen_size().0 - ROSTER.len() as f32 * size) / 2.0,
+                y       : (y as f32 - 0.5) * size,
                 size    : size,
                 colour  : EMPTY,
                 filled  : 0,
                 crossed : 0,
             },
-            position: position,
             value   : value,
         },
     }
