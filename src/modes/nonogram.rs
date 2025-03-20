@@ -60,7 +60,7 @@ pub async unsafe fn nonogram_finished(pack: usize, level: usize, time_of_finish:
     draw_hint_rows(HINTS_ROWS.clone());
     draw_hint_coloumns(HINTS_COLOUMNS.clone());
 
-    solved_nonogram = load_texture(&(path + &((get_time() - time_of_finish) as i16 % DATA[pack][level].frames).to_string() + ".png")).await.unwrap();
+    solved_nonogram = load_texture(&(path + &(((get_time() - time_of_finish) * DATA[pack][level].fps) as i16 % DATA[pack][level].frames).to_string() + ".png")).await.unwrap();
     solved_nonogram.set_filter(FilterMode::Nearest);
     draw_texture_ex(
         &solved_nonogram,

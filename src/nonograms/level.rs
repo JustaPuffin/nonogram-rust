@@ -4,6 +4,7 @@ pub struct LevelContent<'a> {
     pub name: &'a str,
     pub grid: Vec<Vec<i8>>,
     pub frames: i16,
+    pub fps: f64,
 }
 
 pub static mut DATA: LazyLock<Vec<Vec<LevelContent>>> = LazyLock::new(||
@@ -19,6 +20,7 @@ pub static mut DATA: LazyLock<Vec<Vec<LevelContent>>> = LazyLock::new(||
                     vec![0,1,1,1,0],
                 ],
                 frames: 16,
+                fps: 1.0,
             },
         ],
         vec![               // Level Pack   01
@@ -34,6 +36,7 @@ pub static mut DATA: LazyLock<Vec<Vec<LevelContent>>> = LazyLock::new(||
                     vec![1,1,0,0,0,0,1],
                 ],
                 frames: 16,
+                fps: 10.0,
             },
         ],
         vec![               // Level Pack   02
@@ -52,6 +55,7 @@ pub static mut DATA: LazyLock<Vec<Vec<LevelContent>>> = LazyLock::new(||
                     vec![1,0,0,1,1,1,0,0,1,1],
                 ],
                 frames: 16,
+                fps: 10.0,
             },
         ],
         vec![               // Level Pack   03
@@ -75,6 +79,7 @@ pub static mut DATA: LazyLock<Vec<Vec<LevelContent>>> = LazyLock::new(||
                     vec![0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                 ],
                 frames: 4,
+                fps: 10.0,
             },
         ],
     ]);
@@ -85,6 +90,7 @@ pub unsafe fn get_data(pack: usize, level: usize) -> LevelContent<'static> {
         name: DATA[pack][level].name,
         grid: DATA[pack][level].grid.clone(),
         frames: DATA[pack][level].frames,
+        fps: DATA[pack][level].fps,
     };
     println!("Level name: {}", DATA[pack][level].name);
     return puzzle;

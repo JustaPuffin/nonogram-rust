@@ -13,11 +13,11 @@ type ModeType = i16;
 const NONOGRAM_PLAY: ModeType = 4;
 const NONOGRAM_FINISHED: ModeType = 5;
 
-const WINDOW_WIDTH: u32 = 1980;
-const WINDOW_HEIGHT: u32 = 1080;
+const WINDOW_WIDTH: u32 = 2560;
+const WINDOW_HEIGHT: u32 = 1600;
 
 
-static mut PACK: usize = 3;
+static mut PACK: usize = 1;
 static mut LEVEL: usize = 0;
 
 static mut ROSTER: Vec<Vec<Field>> = vec![];
@@ -58,6 +58,7 @@ static mut TIMER_PENALTY_COUNT: i32 = 0;
     let grid = unsafe {level::get_data(PACK, LEVEL).grid};
 
     miniquad::window::set_window_size(WINDOW_WIDTH,WINDOW_HEIGHT);
+    miniquad::window::set_fullscreen(true);
 
 
 
