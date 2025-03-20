@@ -21,6 +21,21 @@ pub static mut DATA: LazyLock<Vec<Vec<LevelContent>>> = LazyLock::new(||
                 frames: 16,
             },
         ],
+        vec![               // Level Pack   01
+            LevelContent {  // Level        00
+                name: "Clock",
+                grid: vec![
+                    vec![1,1,0,0,0,0,1],
+                    vec![1,1,0,0,0,0,1],
+                    vec![1,0,1,1,1,0,1],
+                    vec![0,0,1,1,0,0,1],
+                    vec![0,0,0,0,0,0,1],
+                    vec![0,1,0,0,0,0,1],
+                    vec![1,1,0,0,0,0,1],
+                ],
+                frames: 16,
+            },
+        ],
     ]);
 
 // gets data for a nonogram

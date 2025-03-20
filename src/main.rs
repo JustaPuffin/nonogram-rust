@@ -52,9 +52,9 @@ static mut HINTS_COLOUMNS : Vec<Vec<Hint>> = vec![];
     let grid = unsafe {level::get_data(PACK, LEVEL).grid};
 
     unsafe {
+        ROSTER = nonogram::get_nonogram_field(grid.clone());
         HINTS_ROWS = nonogram::get_nonogram_hint_rows(grid.clone());
         HINTS_COLOUMNS = nonogram::get_nonogram_hint_coloums(grid.clone());
-        ROSTER = nonogram::get_nonogram_field(grid.clone());
     }
     
     loop {

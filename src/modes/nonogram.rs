@@ -120,6 +120,7 @@ pub fn get_nonogram_field(grid: Vec<Vec<i8>>) -> Vec<Vec<Field>> {
 // gets num for rows of nonogram field
 pub fn get_nonogram_hint_rows(grid: Vec<Vec<i8>>) -> Vec<Vec<Hint>> {
     let mut hint_rows: Vec<Vec<Hint>> = vec![];
+    let mut hint_length: usize;
     let mut count: i8;
     let mut temp_x: usize;
     let mut temp_y: usize;
@@ -133,13 +134,15 @@ pub fn get_nonogram_hint_rows(grid: Vec<Vec<i8>>) -> Vec<Vec<Hint>> {
             if grid[y][x] == 1 {count += 1}
             else if count > 0 {
                 temp_x = grid[y].len() - hint_rows[temp_y].len() + 2;
-                hint_rows[temp_y].push(unsafe {get_hint(temp_x, y, size, HintPosition::Row, count)});
+                hint_length = hint_rows[temp_y].len();
+                hint_rows[temp_y].push(unsafe {get_hint(hint_length, temp_x, y, size, HintPosition::Row, count)});
                 count = 0;
             }
         }
         if count > 0 || hint_rows[temp_y].len() == 0 {
             temp_x = grid[y].len() - hint_rows[temp_y].len() + 2;
-            hint_rows[temp_y].push(unsafe {get_hint(temp_x, y, size, HintPosition::Row, count)});
+            hint_length = hint_rows[temp_y].len();
+            hint_rows[temp_y].push(unsafe {get_hint(hint_length, temp_x, y, size, HintPosition::Row, count)});
         }
     }
     return hint_rows;
@@ -148,6 +151,7 @@ pub fn get_nonogram_hint_rows(grid: Vec<Vec<i8>>) -> Vec<Vec<Hint>> {
 // gets num for coloumns of nonogram field
 pub fn get_nonogram_hint_coloums(grid: Vec<Vec<i8>>) -> Vec<Vec<Hint>> {
     let mut hint_coloumns: Vec<Vec<Hint>> = vec![];
+    let mut hint_length: usize;
     let mut count: i8;
     let mut temp_x: usize;
     let mut temp_y: usize;
@@ -161,15 +165,16 @@ pub fn get_nonogram_hint_coloums(grid: Vec<Vec<i8>>) -> Vec<Vec<Hint>> {
         for y in (0..grid[x].len()).rev() {
             if grid[y][x] == 1 {count += 1}
             else if count > 0 {
-                
                 temp_y = grid[x].len() - hint_coloumns[temp_x].len();
-                hint_coloumns[temp_x].push(unsafe {get_hint(x, temp_y, size, HintPosition::Coloumn, count)});
+                hint_length = hint_coloumns[temp_x].len();
+                hint_coloumns[temp_x].push(unsafe {get_hint(hint_length, x, temp_y, size, HintPosition::Coloumn, count)});
                 count = 0;
             }
         }
         if count > 0 || hint_coloumns[temp_x].len() == 0 {
             temp_y = grid[x].len() - hint_coloumns[temp_x].len();
-            hint_coloumns[temp_x].push(unsafe {get_hint(x, temp_y, size, HintPosition::Coloumn, count)});
+            hint_length = hint_coloumns[temp_x].len();
+            hint_coloumns[temp_x].push(unsafe {get_hint(hint_length, x, temp_y, size, HintPosition::Coloumn, count)});
         }
     }
 
@@ -177,12 +182,12 @@ pub fn get_nonogram_hint_coloums(grid: Vec<Vec<i8>>) -> Vec<Vec<Hint>> {
 }
 
 // returns a Hint struct from provided contents
-unsafe fn get_hint(x: usize, y: usize, size: f32, position: HintPosition, value: i8) -> Hint {
+unsafe fn get_hint(hint_length: usize, x: usize, y: usize, size: f32, position: HintPosition, value: i8) -> Hint {
     match position {
         HintPosition::Row       => return Hint {
             data    : Field {
-                x       : (x as f32 - 0.5) * size,
-                y       : (y as f32 - 1.75) * size + (window::screen_size().1 - ROSTER.len() as f32 * size) / 2.0,
+                x       : ROSTER[y][0].x - size * (hint_length + 1) as f32 + size * 0.25, //(x as f32 - 0.5) * size,
+                y       : ROSTER[y][0].y + size * 0.75, //(y as f32 - 1.75) * size + (window::screen_size().1 - ROSTER.len() as f32 * size) / 2.0,
                 size    : size,
                 colour  : EMPTY,
                 filled  : 0,
@@ -192,8 +197,8 @@ unsafe fn get_hint(x: usize, y: usize, size: f32, position: HintPosition, value:
         },
         HintPosition::Coloumn   => return Hint {
             data    : Field {
-                x       : (x as f32 - 2.25) * size + (window::screen_size().0 - ROSTER.len() as f32 * size) / 2.0,
-                y       : (y as f32 - 0.5) * size,
+                x       : ROSTER[0][x].x + size / 2.0 - size / 4.0, // (x as f32 - 2.25) * size + (window::screen_size().0 - ROSTER.len() as f32 * size) / 2.0,
+                y       : ROSTER[0][x].y - size * hint_length as f32 - size * 0.25,
                 size    : size,
                 colour  : EMPTY,
                 filled  : 0,
