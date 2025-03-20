@@ -1,5 +1,4 @@
 use macroquad::prelude::*;
-use macroquad::miniquad::window;
 use std::cmp;
 
 use crate::{
@@ -8,8 +7,10 @@ use crate::{
     HintPosition,
     HINTS_COLOUMNS,
     HINTS_ROWS,
-    LEVEL,
+    WINDOW_WIDTH,
+    WINDOW_HEIGHT,
     PACK,
+    LEVEL,
     ROSTER,
 
     level::DATA,
@@ -60,7 +61,7 @@ pub unsafe fn nonogram_play() {
 
 // function used for the mode NONOGRAM_FINISHED
 pub async unsafe fn nonogram_finished(pack: usize, level: usize, time_of_finish: f64) {
-    let size = window::screen_size().0 / 4.0;
+    let size = WINDOW_WIDTH as f32 / 4.0;
     let path = format!("src/nonograms/pack-{:?}/level-{:?}/solved/", pack, level);
     let solved_nonogram: Texture2D;
 
@@ -94,7 +95,7 @@ pub async unsafe fn nonogram_finished(pack: usize, level: usize, time_of_finish:
 // gets a clear nonogram field
 pub fn get_nonogram_field(grid: Vec<Vec<i8>>) -> Vec<Vec<Field>> {
     let mut roster: Vec<Vec<Field>> = vec![];
-    let size = window::screen_size().0 / 4.0 / cmp::max(grid.len(), grid[0].len()) as f32;
+    let size = WINDOW_WIDTH as f32 / 4.0 / cmp::max(grid.len(), grid[0].len()) as f32;
     
 
     for y in 0..grid.len() {
@@ -102,8 +103,8 @@ pub fn get_nonogram_field(grid: Vec<Vec<i8>>) -> Vec<Vec<Field>> {
         for x in 0..grid[y].len() {
             roster[y].push(
                 Field {
-                    x       : x as f32 * size + (window::screen_size().0 - grid.len() as f32 * size) / 2.0,
-                    y       : y as f32 * size + (window::screen_size().1 - grid[y].len() as f32 * size) / 2.0,
+                    x       : x as f32 * size + (WINDOW_WIDTH as f32 - grid.len() as f32 * size) / 2.0,
+                    y       : y as f32 * size + (WINDOW_HEIGHT as f32 - grid[y].len() as f32 * size) / 2.0,
                     size    : size,
                     colour  : EMPTY,
                     filled  : 0,
@@ -124,7 +125,7 @@ pub fn get_nonogram_hint_rows(grid: Vec<Vec<i8>>) -> Vec<Vec<Hint>> {
     let mut count: i8;
     let mut temp_x: usize;
     let mut temp_y: usize;
-    let size = window::screen_size().0 / 4.0 / cmp::max(grid.len(), grid[0].len()) as f32;
+    let size = WINDOW_WIDTH as f32 / 4.0 / cmp::max(grid.len(), grid[0].len()) as f32;
 
     for y in (0..grid.len()).rev() {
         hint_rows.push(vec![]);
@@ -155,8 +156,7 @@ pub fn get_nonogram_hint_coloums(grid: Vec<Vec<i8>>) -> Vec<Vec<Hint>> {
     let mut count: i8;
     let mut temp_x: usize;
     let mut temp_y: usize;
-    let max = cmp::max(grid.len(), grid[0].len()) as f32;
-    let size = window::screen_size().0 / 4.0 / max;
+    let size = WINDOW_WIDTH as f32 / 4.0 / cmp::max(grid.len(), grid[0].len()) as f32;
 
     for x in (0..grid.len()).rev() {
         hint_coloumns.push(vec![]);
@@ -183,10 +183,11 @@ pub fn get_nonogram_hint_coloums(grid: Vec<Vec<i8>>) -> Vec<Vec<Hint>> {
 
 // returns a Hint struct from provided contents
 unsafe fn get_hint(hint_length: usize, x: usize, y: usize, size: f32, position: HintPosition, value: i8) -> Hint {
+    let value_length = value.to_string().len() as f32;
     match position {
         HintPosition::Row       => return Hint {
             data    : Field {
-                x       : ROSTER[y][0].x - size * (hint_length + 1) as f32 + size * 0.25, //(x as f32 - 0.5) * size,
+                x       : ROSTER[y][0].x - size * (hint_length + 1) as f32 + size * 0.25 - size * value_length * 0.25, //(x as f32 - 0.5) * size,
                 y       : ROSTER[y][0].y + size * 0.75, //(y as f32 - 1.75) * size + (window::screen_size().1 - ROSTER.len() as f32 * size) / 2.0,
                 size    : size,
                 colour  : EMPTY,
@@ -197,7 +198,7 @@ unsafe fn get_hint(hint_length: usize, x: usize, y: usize, size: f32, position: 
         },
         HintPosition::Coloumn   => return Hint {
             data    : Field {
-                x       : ROSTER[0][x].x + size / 2.0 - size / 4.0, // (x as f32 - 2.25) * size + (window::screen_size().0 - ROSTER.len() as f32 * size) / 2.0,
+                x       : ROSTER[0][x].x + size / 2.0 - size * value_length * 0.25, // (x as f32 - 2.25) * size + (window::screen_size().0 - ROSTER.len() as f32 * size) / 2.0,
                 y       : ROSTER[0][x].y - size * hint_length as f32 - size * 0.25,
                 size    : size,
                 colour  : EMPTY,

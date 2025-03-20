@@ -23,7 +23,7 @@ pub static mut DATA: LazyLock<Vec<Vec<LevelContent>>> = LazyLock::new(||
         ],
         vec![               // Level Pack   01
             LevelContent {  // Level        00
-                name: "Clock",
+                name: "Phone",
                 grid: vec![
                     vec![1,1,0,0,0,0,1],
                     vec![1,1,0,0,0,0,1],
@@ -32,6 +32,24 @@ pub static mut DATA: LazyLock<Vec<Vec<LevelContent>>> = LazyLock::new(||
                     vec![0,0,0,0,0,0,1],
                     vec![0,1,0,0,0,0,1],
                     vec![1,1,0,0,0,0,1],
+                ],
+                frames: 16,
+            },
+        ],
+        vec![               // Level Pack   02
+            LevelContent {  // Level        00
+                name: "Table",
+                grid: vec![
+                    vec![1,1,1,1,1,1,1,1,1,1],
+                    vec![1,1,1,1,1,1,1,1,1,1],
+                    vec![1,0,0,0,0,0,0,0,0,1],
+                    vec![0,0,0,0,0,0,0,0,0,0],
+                    vec![0,0,0,0,0,0,0,0,0,0],
+                    vec![1,1,1,0,0,0,0,0,0,1],
+                    vec![1,1,1,1,1,1,1,1,1,1],
+                    vec![1,0,0,0,1,1,0,0,0,1],
+                    vec![1,0,0,1,1,1,0,0,1,1],
+                    vec![1,0,0,1,1,1,0,0,1,1],
                 ],
                 frames: 16,
             },

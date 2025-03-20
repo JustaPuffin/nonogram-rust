@@ -10,15 +10,18 @@ type ModeType = i16;
 //const MENU_PACK : ModeType = 1;
 //const MENU_LEVEL : ModeType = 2;
 //const MENU_OPTIONS : ModeType = 3;
-const NONOGRAM_PLAY : ModeType = 4;
-const NONOGRAM_FINISHED : ModeType = 5;
+const NONOGRAM_PLAY: ModeType = 4;
+const NONOGRAM_FINISHED: ModeType = 5;
+
+const WINDOW_WIDTH: u32 = 1980;
+const WINDOW_HEIGHT: u32 = 1080;
 
 
-static mut PACK : usize = 0;
-static mut LEVEL : usize = 0;
-static mut ROSTER : Vec<Vec<Field>> = vec![];
-static mut HINTS_ROWS : Vec<Vec<Hint>> = vec![];
-static mut HINTS_COLOUMNS : Vec<Vec<Hint>> = vec![];
+static mut PACK: usize = 2;
+static mut LEVEL: usize = 0;
+static mut ROSTER: Vec<Vec<Field>> = vec![];
+static mut HINTS_ROWS: Vec<Vec<Hint>> = vec![];
+static mut HINTS_COLOUMNS: Vec<Vec<Hint>> = vec![];
 
 
 
@@ -45,6 +48,7 @@ static mut HINTS_COLOUMNS : Vec<Vec<Hint>> = vec![];
 }
 
 #[macroquad::main("Nonogram")] async fn main() {
+    miniquad::window::set_window_size(WINDOW_WIDTH,WINDOW_HEIGHT);
     let mut mode: ModeType  = NONOGRAM_PLAY;
     let mut nonogram_time = String::new();
     let nonogram_start = get_time();
