@@ -2,18 +2,7 @@ use macroquad::prelude::*;
 use std::cmp;
 
 use crate::{
-    Field,
-    Hint,
-    HintPosition,
-    HINTS_COLOUMNS,
-    HINTS_ROWS,
-    WINDOW_WIDTH,
-    WINDOW_HEIGHT,
-    PACK,
-    LEVEL,
-    ROSTER,
-
-    level::DATA,
+    level::DATA, Field, Hint, HintPosition, HINTS_COLOUMNS, HINTS_ROWS, LEVEL, PACK, ROSTER, TIMER_PENALTY_COUNT, WINDOW_HEIGHT, WINDOW_WIDTH
 };
 
 const BACKGROUND        : Color     = Color { // Background colour
@@ -297,7 +286,7 @@ pub unsafe fn update_roster(input: MouseButton, roster: Vec<Vec<Field>>, x: usiz
             temp[y][x].colour = CROSSED;
             temp[y][x].filled = 0;
             temp[y][x].crossed = 1;
-            todo!("Add Time Penalty!");
+            TIMER_PENALTY_COUNT += 1;
         }
         MouseButton::Right => if temp[y][x].crossed == 1 {
             temp[y][x].colour = EMPTY;
@@ -307,7 +296,7 @@ pub unsafe fn update_roster(input: MouseButton, roster: Vec<Vec<Field>>, x: usiz
             temp[y][x].filled = 0;
             temp[y][x].crossed = 1;
         }
-        _ => todo!()
+        _ => todo!("SOMETHING WENT WRONG WITH THE PLAYER INPUT WHILE PLAYING!")
     }
     return temp
 }

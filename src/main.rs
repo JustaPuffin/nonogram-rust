@@ -19,10 +19,15 @@ const WINDOW_HEIGHT: u32 = 1080;
 
 static mut PACK: usize = 2;
 static mut LEVEL: usize = 0;
+
 static mut ROSTER: Vec<Vec<Field>> = vec![];
 static mut HINTS_ROWS: Vec<Vec<Hint>> = vec![];
 static mut HINTS_COLOUMNS: Vec<Vec<Hint>> = vec![];
 
+static mut TIMER_START: f64 = 0.0;
+static mut TIMER_END: f64 = 0.0;
+static mut TIMER_PENALTY_TIME: f64 = 0.0;
+static mut TIMER_PENALTY_COUNT: i32 = 0;
 
 
 
@@ -48,12 +53,13 @@ static mut HINTS_COLOUMNS: Vec<Vec<Hint>> = vec![];
 }
 
 #[macroquad::main("Nonogram")] async fn main() {
-    miniquad::window::set_window_size(WINDOW_WIDTH,WINDOW_HEIGHT);
     let mut mode: ModeType  = NONOGRAM_PLAY;
-    let mut nonogram_time = String::new();
-    let nonogram_start = get_time();
-    let nonogram_end: f64;
+    let mut timer_text = String::new();
     let grid = unsafe {level::get_data(PACK, LEVEL).grid};
+
+    miniquad::window::set_window_size(WINDOW_WIDTH,WINDOW_HEIGHT);
+
+
 
     unsafe {
         ROSTER = nonogram::get_nonogram_field(grid.clone());
@@ -64,23 +70,33 @@ static mut HINTS_COLOUMNS: Vec<Vec<Hint>> = vec![];
     loop {
         match mode {
             NONOGRAM_PLAY => {
+                unsafe {
+                    TIMER_START = get_time();
+                    TIMER_PENALTY_COUNT = 0;
+                };
                 loop {
-                unsafe{nonogram::nonogram_play()};
-                nonogram_time = "Time: ".to_owned()
-                + &((get_time() - nonogram_start) as i32 / 3600 % 60).to_string() + ":"
-                + &((get_time() - nonogram_start) as i32 / 60 % 60).to_string() + ":"
-                + &((get_time() - nonogram_start) as i32 % 60).to_string();
-                draw_text(&nonogram_time, 20.0, window::screen_size().1 - 20.0, window::screen_size().0 / 20.0, WHITE);
+                unsafe{
+                    nonogram::nonogram_play();
+                    TIMER_PENALTY_TIME = 0.0;
+                    for i in 1..TIMER_PENALTY_COUNT + 1 {TIMER_PENALTY_TIME += clamp(f64::powi(2.0, i), 2.0, 8.0) * 60.0}
+                    TIMER_END = get_time() + TIMER_PENALTY_TIME;
+
+
+                    timer_text = "Time: ".to_owned()
+                        + &((TIMER_END - TIMER_START) as i32 / 3600 % 60).to_string() + ":"
+                        + &((TIMER_END - TIMER_START) as i32 / 60 % 60).to_string() + ":"
+                        + &((TIMER_END - TIMER_START) as i32 % 60).to_string();
+                }
+                draw_text(&timer_text, 20.0, window::screen_size().1 - 20.0, window::screen_size().0 / 20.0, WHITE);
                 if unsafe {nonogram::check_roster_state(ROSTER.clone(), PACK, LEVEL)} {
                     mode = NONOGRAM_FINISHED;
                     break;
                 }
                 next_frame().await}}
             NONOGRAM_FINISHED => {
-                nonogram_end = get_time();
                 loop {
-                    unsafe {nonogram::nonogram_finished(PACK, LEVEL, nonogram_end).await;};
-                    draw_text(&nonogram_time, 20.0, window::screen_size().1 - 20.0, window::screen_size().0 / 20.0, WHITE);
+                    unsafe {nonogram::nonogram_finished(PACK, LEVEL, TIMER_END).await;};
+                    draw_text(&timer_text, 20.0, window::screen_size().1 - 20.0, window::screen_size().0 / 20.0, WHITE);
                     next_frame().await}}
 
             _ => todo!("Mode {:?} doesn't exist or isn't implemented yet", mode),
