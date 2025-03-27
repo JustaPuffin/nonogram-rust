@@ -17,7 +17,7 @@ const WINDOW_WIDTH: u32 = 2560;
 const WINDOW_HEIGHT: u32 = 1600;
 
 
-static mut PACK: usize = 1;
+static mut PACK: usize = 4;
 static mut LEVEL: usize = 0;
 
 static mut ROSTER: Vec<Vec<Field>> = vec![];
