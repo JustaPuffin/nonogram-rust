@@ -2,7 +2,7 @@ use macroquad::prelude::*;
 use std::cmp;
 
 use crate::{
-    level::DATA, Field, Hint, HintPosition, HINTS_COLOUMNS, HINTS_ROWS, LEVEL, PACK, ROSTER, TIMER_PENALTY_COUNT, WINDOW_HEIGHT, WINDOW_WIDTH
+    level::DATA, Field, Hint, HintPosition, HINTS_COLOUMNS, HINTS_ROWS, LEVEL, PACK, ROSTER, SCALE, TIMER_PENALTY_COUNT, WINDOW_HEIGHT, WINDOW_WIDTH
 };
 
 const BACKGROUND        : Color     = Color { // Background colour
@@ -50,8 +50,9 @@ pub unsafe fn nonogram_play() {
 
 // function used for the mode NONOGRAM_FINISHED
 pub async unsafe fn nonogram_finished(pack: usize, level: usize, time_of_finish: f64) {
-    let size = WINDOW_WIDTH as f32 / 4.0;
-    let path = format!("src/nonograms/pack-{:?}/level-{:?}/solved/{:?}.png", pack, level, (((get_time() - time_of_finish) * DATA[pack][level].fps) as i16 % DATA[pack][level].frames));
+    let size_w = cmp::max(WINDOW_WIDTH,WINDOW_HEIGHT) as f32 / SCALE;
+    let size_h = cmp::max(WINDOW_WIDTH,WINDOW_HEIGHT) as f32 / SCALE;
+    let path = format!("src/nonograms/pack-{:?}/level-{:?}/solved/{:?}.png", pack, level, (f64::abs(get_time() - time_of_finish) * DATA[pack][level].fps) as i16 % DATA[pack][level].frames);
     let solved_nonogram: Texture2D;
 
     clear_background(BACKGROUND);
@@ -68,7 +69,7 @@ pub async unsafe fn nonogram_finished(pack: usize, level: usize, time_of_finish:
         ROSTER[0][0].y,
         WHITE,
         DrawTextureParams {
-            dest_size: Some(vec2(size, size)),
+            dest_size: Some(vec2(size_w, size_h)),
             source: None,
             rotation: 0.0,
             flip_x: false,
@@ -84,7 +85,7 @@ pub async unsafe fn nonogram_finished(pack: usize, level: usize, time_of_finish:
 // gets a clear nonogram field
 pub fn get_nonogram_field(grid: Vec<Vec<i8>>) -> Vec<Vec<Field>> {
     let mut roster: Vec<Vec<Field>> = vec![];
-    let size = WINDOW_WIDTH as f32 / 4.0 / cmp::max(grid.len(), grid[0].len()) as f32;
+    let size = WINDOW_WIDTH as f32 / SCALE / cmp::max(grid.len(), grid[0].len()) as f32;
     
 
     for y in 0..grid.len() {
@@ -114,7 +115,7 @@ pub fn get_nonogram_hint_rows(grid: Vec<Vec<i8>>) -> Vec<Vec<Hint>> {
     let mut count: i8;
     let mut temp_x: usize;
     let mut temp_y: usize;
-    let size = WINDOW_WIDTH as f32 / 4.0 / cmp::max(grid.len(), grid[0].len()) as f32;
+    let size = WINDOW_WIDTH as f32 / SCALE / cmp::max(grid.len(), grid[0].len()) as f32;
 
     for y in (0..grid.len()).rev() {
         hint_rows.push(vec![]);
@@ -144,28 +145,32 @@ pub fn get_nonogram_hint_coloums(grid: Vec<Vec<i8>>) -> Vec<Vec<Hint>> {
     let mut hint_length: usize;
     let mut count: i8;
     let mut temp_x: usize;
-    let mut temp_y: usize;
-    let size = WINDOW_WIDTH as f32 / 4.0 / cmp::max(grid.len(), grid[0].len()) as f32;
+    let mut temp_y: usize = 0;
+    let size = WINDOW_WIDTH as f32 / SCALE / cmp::max(grid.len(), grid[0].len()) as f32;
 
-    for x in (0..grid.len()).rev() {
+    for x in 0..grid[0].len() {
         hint_coloumns.push(vec![]);
         temp_x = hint_coloumns.len()-1;
         count = 0;
-        for y in (0..grid[x].len()).rev() {
+
+        for y in (0..grid.len()).rev() {
+
+            temp_y = grid[0].len() - hint_coloumns.len();
             if grid[y][x] == 1 {count += 1}
             else if count > 0 {
-                temp_y = grid[x].len() - hint_coloumns[temp_x].len();
                 hint_length = hint_coloumns[temp_x].len();
-                hint_coloumns[temp_x].push(unsafe {get_hint(hint_length, x, temp_y, size, HintPosition::Coloumn, count)});
+                hint_coloumns[temp_x].push(unsafe {get_hint(hint_length, temp_x, temp_y, size, HintPosition::Coloumn, count)});
                 count = 0;
             }
         }
+
         if count > 0 || hint_coloumns[temp_x].len() == 0 {
-            temp_y = grid[x].len() - hint_coloumns[temp_x].len();
             hint_length = hint_coloumns[temp_x].len();
-            hint_coloumns[temp_x].push(unsafe {get_hint(hint_length, x, temp_y, size, HintPosition::Coloumn, count)});
+            hint_coloumns[temp_x].push(unsafe {get_hint(hint_length, temp_x, temp_y, size, HintPosition::Coloumn, count)});
         }
     }
+
+
 
     return hint_coloumns;
 }
